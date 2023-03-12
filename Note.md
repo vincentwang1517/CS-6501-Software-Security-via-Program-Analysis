@@ -5,6 +5,12 @@
 ## Proj1
 
 ```bash
+objdump -S moon-buggy > moon-buggy.S
+```
+
+
+
+```bash
 grep crash *.c
 grep crash_detected *.c
 ```
