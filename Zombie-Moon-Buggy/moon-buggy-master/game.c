@@ -124,7 +124,7 @@ signal_handler (int signum)
   switch (signum) {
   case SIGTSTP:
     if (lives > 1)  lives = 1;
-    //if (! crash_detected)  crash_detected = 1;  //Proj1
+    if (! crash_detected)  crash_detected = 1;
     print_message ("GAME OVER (suspended)");
     break;
   case SIGCONT:

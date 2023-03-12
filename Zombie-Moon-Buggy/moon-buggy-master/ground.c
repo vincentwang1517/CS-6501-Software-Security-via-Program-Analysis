@@ -72,7 +72,7 @@ scroll_handler (game_time t, void *client_data)
   }
 
   if (crash_detected || crash_check ()) {
-    //++crash_detected; //Porj1
+    ++crash_detected;
     if (crash_detected > 35)  mode_change (crash_mode, 1);
   }
 

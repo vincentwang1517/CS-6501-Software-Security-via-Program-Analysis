@@ -152,7 +152,7 @@ wheel_handler (game_time t, void *client_data)
     mvwaddch (moon, wheel_y, wheel_x, 'o');
     add_event (t+TICK(2.3), wheel_handler, NULL);
   } else {
-    //crash_detected = 1000;  //Proj1
+    crash_detected = 1000;
   }
   wnoutrefresh (moon);
 }
@@ -176,7 +176,7 @@ jump_handler (game_time t, void *client_data)
     if (meteor_car_hit (car_x, car_x+7)) {
       state = sz_sit;
       start_wheel ();
-      //crash_detected = 1; //Proj1
+      crash_detected = 1;
     }
   }
   print_buggy ();
@@ -207,7 +207,6 @@ int
 crash_check (void)
 /* Return true, if the car crashed.  */
 {
-  return 0;  // Proj1
   if (! state->has_ground)  return 0;
   if (ground2[car_x+1] == ' ' || ground2[car_x+5] == ' ') {
     remove_event (jump_handler);
@@ -230,7 +229,7 @@ car_meteor_hit (int x)
     add_event (current_time (), jump_handler, sz_ram);
     print_buggy ();
     start_wheel ();
-    //crash_detected = 1; //Proj1
+    crash_detected = 1;
     return 1;
   }
 
