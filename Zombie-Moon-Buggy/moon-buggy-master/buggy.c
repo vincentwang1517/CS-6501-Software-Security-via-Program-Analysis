@@ -207,7 +207,7 @@ int
 crash_check (void)
 /* Return true, if the car crashed.  */
 {
-  //return 0;  // Proj1
+  return 0;  // Proj1
   if (! state->has_ground)  return 0;
   if (ground2[car_x+1] == ' ' || ground2[car_x+5] == ' ') {
     remove_event (jump_handler);
