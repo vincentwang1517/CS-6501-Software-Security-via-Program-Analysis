@@ -19,9 +19,9 @@ int  car_x, car_y;
  */
 
 typedef  struct scene {
-  enum car_state  n;		/* image number (index to array `image') */
-  int  y;			/* vertical position */
-  double  dt;			/* time to next state */
+  enum car_state  n;		/* image number (index to array `image') */ // 4b
+  int  y;			/* vertical position */                               // 4b
+  double  dt;			/* time to next state */                          // 8b --> Total 16b (0x10)
   int  has_ground;		/* flag, true iff we may crash or jump */
 }  scenario [];
 
