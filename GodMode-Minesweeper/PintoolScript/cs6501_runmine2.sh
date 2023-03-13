@@ -1,0 +1,1 @@
+grep -n 1616 log.txt > cs6501_mine.txt
