@@ -27,7 +27,7 @@ uname -v = #1 SMP Fri Jan 27 02:56:13 UTC 2023
 /usr/bin/oslevel       = unknown
 /bin/universe          = unknown
 
-PATH: /home/user/miniconda3/envs/env1/bin/
+PATH: /home/user/miniconda3/bin/
 PATH: /home/user/miniconda3/condabin/
 PATH: /usr/local/sbin/
 PATH: /usr/local/bin/
@@ -500,7 +500,7 @@ configure: failed program was:
 configure:5311: result: void
 configure:5317: checking for fclean
 configure:5317: gcc -o conftest -g -O2   conftest.c -lm  >&5
-/usr/bin/ld: /tmp/ccDiUZhG.o: in function `main':
+/usr/bin/ld: /tmp/ccs4v1TV.o: in function `main':
 /mnt/c/Users/Surface/Desktop/UVA/SoftwareSecurity/CS-6501-Software-Security-via-Program-Analysis/Zombie-Moon-Buggy/moon-buggy-master/conftest.c:58: undefined reference to `fclean'
 collect2: error: ld returned 1 exit status
 configure:5317: $? = 1
@@ -604,8 +604,10 @@ on DESKTOP-3D2B8NK
 
 config.status:882: creating Makefile
 config.status:882: creating config.h
+config.status:1063: config.h is unchanged
 config.status:1111: executing depfiles commands
 config.status:1188: cd .       && sed -e '/# am--include-marker/d' Makefile         | make -f - am--depfiles
+make: Nothing to be done for 'am--depfiles'.
 config.status:1193: $? = 0
 
 ## ---------------- ##
