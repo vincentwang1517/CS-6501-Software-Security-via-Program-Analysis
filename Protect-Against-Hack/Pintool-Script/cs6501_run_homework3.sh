@@ -1,0 +1,1 @@
+pin -t ./obj-intel64/cs6501_homework3.so -- /mnt/c/Users/Surface/Desktop/UVA/SoftwareSecurity/CS-6501-Software-Security-via-Program-Analysis/Protect-Against-Hack/flappybird
