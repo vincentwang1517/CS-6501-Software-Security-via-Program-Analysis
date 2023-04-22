@@ -21,7 +21,7 @@ inst_executed_local = set()
 known_string = set()
 remain_inst_filename = "continue_remain.txt"
 execed_inst_filename = "continue_executed.txt"    
-known_string_filename = "continue_executed.txt"    
+known_string_filename = "continue_knownstring.txt"    
 
 load = False
 load_state = False
@@ -108,6 +108,12 @@ def hook_code(uc, address, size, user_data):
         out(output)
         uc.emu_stop()
         return 
+    elif address in known_string:
+        out("This is not an instruction")
+        inst_executed_local.add(address)
+        remove_set(inst_remain, address)
+        uc.emu_stop()
+        return
     
     inst_executed.add(address)
     inst_executed_local.add(address)
@@ -207,6 +213,21 @@ def hook_interrupt(uc, intno, user_data):
         args = read_string(uc, esi)        
         output = ("[SYSCALL(INT 0x80)] SYS_EXECV (Path: '%s', Arg: '%s')" % (filename, args))
         out(output)
+
+        ## Collect address (filename)
+        i = 0
+        for c in filename:
+            addr = i + ebx
+            out("String Byte (filename): (%x)" % (addr))
+            i = i + 1
+            known_string.add(addr)
+        ## Collect address (Args)
+        i = 0
+        for c in args:
+            addr = i + esi
+            out("String Byte (args): (%x)" % (addr))
+            i = i + 1
+            known_string.add(addr)
         
         # should terminate the analysis.
         uc.emu_stop()
@@ -219,6 +240,12 @@ def hook_interrupt(uc, intno, user_data):
         output = ("[SYSCALL(INT 0x80)] SYS_SIGNAL (Signal: %x, Handler: %x)" % (ebx, ecx))
         out(output)
     ##############################
+    elif eax == 0x17:   # sys_setuid
+        output = ("[SYSCALL(INT 0x80)] SYS_SETUID")
+        out(output)
+    elif eax == 0:      # sys_restart_call
+        output = ("[SYSCALL(INT 0x80)] SYS_RESTART_CALL")
+        out(output)
     else:
         out(">>> 0x%x: UNHANDLED interrupt 0x%x, EAX = 0x%x" %(eip, intno, eax))
         uc.emu_stop()
@@ -339,5 +366,5 @@ if __name__ == '__main__':
     CODE_EXAMPLE5 = b"\x31\xd2\xeb\x0e\x31\xdb\x5b\xb1\x19\x83\x2c\x1a\x01\x42\xe2\xf9\xeb\x05\xe8\xed\xff\xff\xff\x32\xc1\x51\x69\x30\x30\x74\x69\x69\x30\x63\x6a\x6f\x32\xdc\x8a\xe4\x51\x55\x54\x51\xb1\x0c\xce\x81";
 
 
-    run_i386(UC_MODE_32, CODE_EXAMPLE1)
+    run_i386(UC_MODE_32, CODE_EXAMPLE3)
 
