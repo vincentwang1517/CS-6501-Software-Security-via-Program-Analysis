@@ -47,19 +47,24 @@ def delete_saved_sets():
 def save_mem_reg_state(uc):
     filename = "memdump.mem1.bin"
     # mem1 = read memory of ADDRESS (for 3MB)
+    mem1 = uc.mem_read(ADDRESS, 3 * 1024 * 1024)
     with open(filename, 'wb') as f:
-        #f.write(mem1)
+        f.write(mem1)
         pass
     filename = "memdump.mem2.bin"
     # mem2 = read memory of 0 (for 3MB)
+    mem2 = uc.mem_read(0, 3 * 1024 * 1024)
     with open(filename, 'wb') as f:
-        #f.write(mem2)
+        f.write(mem2)
         pass
     
     filename = "regdump.txt"
     with open(filename, 'w') as f:
         # save register values
-        # f.write(str(uc.reg_read(UC_X86_REG_EAX))); f.write('\n');
+        f.write(str(uc.reg_read(UC_X86_REG_EAX))); f.write('\n')
+        f.write(str(uc.reg_read(UC_X86_REG_EBX))); f.write('\n')
+        f.write(str(uc.reg_read(UC_X86_REG_EDX))); f.write('\n')
+        f.write(str(uc.reg_read(UC_X86_REG_ESP))); f.write('\n')
         pass
     
 def load_mem_reg_state(uc):
@@ -67,11 +72,13 @@ def load_mem_reg_state(uc):
     with open(filename, 'rb') as f:
         mem1 = f.read()
         # write memory back (uc.mem_write)
+        uc.mem_write(ADDRESS, mem1)
     
     filename = "memdump.mem2.bin"
     with open(filename, 'rb') as f:
         mem2 = f.read()
         # write memory back (uc.mem_write)
+        uc.mem_write(0, mem2)
     
     
     filename = "regdump.txt"
@@ -79,8 +86,14 @@ def load_mem_reg_state(uc):
         lines = f.readlines()
         i = 0
         for ln in lines:
-            #if i == 0:  # eax
-            #    uc.reg_write(UC_X86_REG_EAX, int(ln))
+            if i == 0:  # eax
+               uc.reg_write(UC_X86_REG_EAX, int(ln))
+            elif i == 1:    # ebx
+                uc.reg_write(UC_X86_REG_EBX, int(ln))
+            elif i == 2:    # edx
+                uc.reg_write(UC_X86_REG_EDX, int(ln))
+            elif i == 3:    # esp
+                uc.reg_write(UC_X86_REG_ESP, int(ln))
             i = i + 1
 ##########################################################################################
 
@@ -104,9 +117,11 @@ def hook_code(uc, address, size, user_data):
             cnt_repeated[address] = cnt_repeated[address] + 1
         else:
             cnt_repeated[address] = 1
-        output = "Already covered (stop analysis):: addr %x (repeated: %d)" % (address, cnt_repeated[address])
-        out(output)
-        uc.emu_stop()
+
+        if cnt_repeated[address] == 100:
+            output = "Already covered (stop analysis):: addr %x (repeated: %d)" % (address, cnt_repeated[address])
+            out(output)
+            uc.emu_stop()
         return 
     elif address in known_string:
         out("This is not an instruction")
@@ -180,7 +195,7 @@ def hook_interrupt(uc, intno, user_data):
         uc.emu_stop()
         return 
     elif intno != 0x80:
-        out("[INTERRUPT] Unsupported %x" %intno);
+        out("[INTERRUPT] Unsupported %x" %intno)
         uc.emu_stop()
         return    
 
@@ -241,7 +256,7 @@ def hook_interrupt(uc, intno, user_data):
         out(output)
     ##############################
     elif eax == 0x17:   # sys_setuid
-        output = ("[SYSCALL(INT 0x80)] SYS_SETUID")
+        output = ("[SYSCALL(INT 0x80)] SYS_SETUID, EAX: %x") % (eax)
         out(output)
     elif eax == 0:      # sys_restart_call
         output = ("[SYSCALL(INT 0x80)] SYS_RESTART_CALL")
@@ -281,7 +296,8 @@ def run_i386(mode, code):
         machine_memory_set(uc, code)
         machine_reg_set(uc)
         
-        
+        if load_state == True:
+            load_mem_reg_state(uc)
         #
         # hooks
         #
@@ -340,7 +356,7 @@ if __name__ == '__main__':
     # Example 3:
     #=========================================
     # http://shell-storm.org/shellcode/files/shellcode-99.php
-    CODE_EXAMPLE3 = b"\x31\xc0\x50\x50\xb0\x17\xcd\x80\xeb\x1f\x5e\x50\x68\x2f\x63\x61\x74\x68\x2f\x62\x69\x6e\x89\xe3\x50\x56\x53\x89\xe2\x50\x52\x53\xb0\x0b\x50\xcd\x80\x50\x50\xcd\x80\xe8\xdc\xff\xff\xff\x2f\x65\x74\x63\x2f\x6d\x61\x73\x74\x65\x72\x2e\x70\x61\x73\x73\x77\x64";
+    CODE_EXAMPLE3 = b"\x31\xc0\x50\x50\xb0\x17\xcd\x80\xeb\x1f\x5e\x50\x68\x2f\x63\x61\x74\x68\x2f\x62\x69\x6e\x89\xe3\x50\x56\x53\x89\xe2\x50\x52\x53\xb0\x0b\x50\xcd\x80\x50\x50\xcd\x80\xe8\xdc\xff\xff\xff\x2f\x65\x74\x63\x2f\x6d\x61\x73\x74\x65\x72\x2e\x70\x61\x73\x73\x77\x64"
     
     #=========================================
     # Example 4:
@@ -353,7 +369,7 @@ if __name__ == '__main__':
     # the string is used in the 'execve' syscall. Detect the string's addr, and 
     # prevent the program from executing a string.
     # 3. execve should not return.
-    CODE_EXAMPLE4 =     b"\xeb\x2c\x5e\x31\xc0\xb0\x17\x50\xcd\x80\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x66\x68\x2d\x63\x89\xe7\x50\x56\x57\x53\x89\xe7\x50\x57\x53\x50\xb0\x0b\xcd\x80\xe8\xcf\xff\xff\xff\x2f\x73\x62\x69\x6e\x2f\x6b\x6c\x64\x6c\x6f\x61\x64\x20\x2f\x74\x6d\x70\x2f\x6f\x2e\x6f";
+    CODE_EXAMPLE4 =     b"\xeb\x2c\x5e\x31\xc0\xb0\x17\x50\xcd\x80\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x66\x68\x2d\x63\x89\xe7\x50\x56\x57\x53\x89\xe7\x50\x57\x53\x50\xb0\x0b\xcd\x80\xe8\xcf\xff\xff\xff\x2f\x73\x62\x69\x6e\x2f\x6b\x6c\x64\x6c\x6f\x61\x64\x20\x2f\x74\x6d\x70\x2f\x6f\x2e\x6f"
     
     #=========================================
     # Example 5:
@@ -363,8 +379,8 @@ if __name__ == '__main__':
     ## 31 d2 eb 0e 31 db 5b b1 19 83 2c 1a 01 42 e2 f9 eb 05 e8 ed ff ff ff 32 c1 51 69 30 30 74 69 69 30 63 6a 6f 32 dc 8a e4 51 55 54 51 b1 3c ce 81
     ## ==>
     ## ## 31 d2 eb 0e 31 db 5b b1 19 83 2c 1a 01 42 e2 f9 eb 05 e8 ed ff ff ff 32 c1 51 69 30 30 74 69 69 30 63 6a 6f 32 dc 8a e4 51 55 54 51 b1 0c ce 81    
-    CODE_EXAMPLE5 = b"\x31\xd2\xeb\x0e\x31\xdb\x5b\xb1\x19\x83\x2c\x1a\x01\x42\xe2\xf9\xeb\x05\xe8\xed\xff\xff\xff\x32\xc1\x51\x69\x30\x30\x74\x69\x69\x30\x63\x6a\x6f\x32\xdc\x8a\xe4\x51\x55\x54\x51\xb1\x0c\xce\x81";
+    CODE_EXAMPLE5 = b"\x31\xd2\xeb\x0e\x31\xdb\x5b\xb1\x19\x83\x2c\x1a\x01\x42\xe2\xf9\xeb\x05\xe8\xed\xff\xff\xff\x32\xc1\x51\x69\x30\x30\x74\x69\x69\x30\x63\x6a\x6f\x32\xdc\x8a\xe4\x51\x55\x54\x51\xb1\x0c\xce\x81"
 
 
-    run_i386(UC_MODE_32, CODE_EXAMPLE3)
+    run_i386(UC_MODE_32, CODE_EXAMPLE5)
 
